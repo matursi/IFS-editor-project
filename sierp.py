@@ -1,0 +1,81 @@
+#Sierpinski Gasket hip-pocket program in Python/Tkinter
+#William Baker, Summer 2004, illiMath04 Program
+#Adapted from Math198 course notes by Prof. George Francis
+#University of Illinois Urbana-Champaign Dept. of Mathematics
+
+
+import Tkinter
+import math
+import time
+import random
+
+defaldelay=0 #default delay time
+defalstep=4000 #default number of steps per click
+
+#function to create a point
+#point is created by drawing a line one pixel in length
+#Parameters: current Canvas, x coordinate, y coordinate
+def createPoint(canvas, x0, y0):
+   canvas.create_line(x0, y0, x0+1, y0, fill="green")
+
+#startAnimation()
+#This function acutal draws the gasket, it is called when
+#the start button is pressed
+def startAnimation():
+   x=400 #starting point
+   y=200
+   xList=[100,500,500] #x and y coordinates of gasket corners
+   yList=[264,100,326]
+
+   #iterate for the specified number of times, each time
+   #adding a point
+   for j in range(0, int(numsteps.get())): 
+      i=randclass.randint(0,2)
+
+      x=(x+xList[i])/2.0
+      y=(y+yList[i])/2.0
+
+      createPoint(canvas,x,y)      
+     
+      canvas.update()
+      #delay drawing based on animation delay specified
+      time.sleep(int(timedelay.get())/20.0)
+
+
+#clear()
+#clears the canvas so that another gasket may be drawn
+def clear():
+    canvas.delete("all")
+
+
+window = Tkinter.Tk()
+window.title("Sierpinski Gasket in Python/Tkinter")
+
+#below define the labels, buttons, and input fields
+clear_button = Tkinter.Button(window, text = "Clear", command = clear)
+
+start = Tkinter.Button(window, text="Start", command=startAnimation)
+delLabel=Tkinter.Label(window, width="15")
+delLabel.configure(text="Time Delay= ")
+timedelay=Tkinter.StringVar()
+timedelay.set(`defaldelay`)
+numsteps=Tkinter.StringVar()
+numsteps.set(`defalstep`)
+delentry = Tkinter.Entry(window, width="15", textvariable=timedelay)
+stepLabel=Tkinter.Label(window, width="15")
+stepLabel.configure(text="Num Points= ")
+stepentry=Tkinter.Entry(window, width="15", textvariable=numsteps)
+canvas = Tkinter.Canvas(window, width=640, height=480, background="black")
+randclass=random.Random()
+
+canvas.pack(side="top")
+delLabel.pack(side="left")
+delentry.pack(side="left")
+start.pack(side="right")
+clear_button.pack(side = "right")
+stepLabel.pack(side="left")
+stepentry.pack(side="left")
+
+# start event loop
+window.mainloop()
+

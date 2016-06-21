@@ -1,0 +1,19 @@
+Documentation of Project:
+
+What I have done so far: 
+
+prepare a tkinter program that illustrates the barnsley fern.
+This fern can be so far altared in hte number of points generated
+and the probabilities of each of the functions in the IFS used to 
+generate it.   By altering the probabilities, I was able to see how the functions
+interacted to form the fern, and which function produces which part of the fern.
+
+
+What I plan to do:
+
+I hope to edit the very shape of the fern interactively.  This will first be done
+using a simpler figure, particularly the unit square, whose shape can be translated, dilated, or skewed (depending on what I want to do).  
+
+Afterwards, I hope to model the function trassformations on the unit square, but also through distortions, to alter the IFS used to generate the fern.  The distortions of the squares will determine the functions used to make the matrix transformations defining the IFS.  
+
+If time permits, I also hope to have a basic set of default transformations, and not just the Barnsley fern.

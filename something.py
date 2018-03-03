@@ -414,6 +414,7 @@ File.menu.add_command(label="Save as picture", command=generate_image)
 
 
 # puts entries for the probabilities of linear transformations in entry frame
+#and sets points to default P (here it was just a row of 0s)
 probEntry=[]
 prob=[]
 for i in range(4):
@@ -423,7 +424,7 @@ for i in range(4):
 	V.set(P[i])
 	prob[i].grid(row=1+i,column=7)
 	
-
+#creates a label for probability 
 probLabel=Tkinter.Label(frame, width="9")
 probLabel.configure(text="probabilities")
 
@@ -433,9 +434,11 @@ FunctionLabels=[] #labels for functions, will match the transformations represen
 			#the four squares
 for i in range(number_functions):
 	FunctionLabels=FunctionLabels+[Tkinter.Label(frame,text="f"+str(i+1))]
-	FunctionLabels[i].grid(row = 1+i, column= 0)
+	FunctionLabels[i].grid(row = 1+i, column= 0) #label location in entry frame
 
+# function_entries is a list that will contain TKinter entry variables that you can call to get string inputs
 function_entries=[]
+# func is a list of the actual entry widgets
 func=[]
 for i in range(number_functions):
 	for j in range(6):
@@ -446,8 +449,7 @@ for i in range(number_functions):
 		func[-1].grid(row=1+i,column=j+1)
 
 
- #generates an identical image that can be saved as a jpeg file.
-
+# function that generates a new line of function entries (these are six entries, representing a linear function
 def add_function():
 	global matrices
 	global quads
@@ -464,44 +466,49 @@ def add_function():
 
 	number_functions+=1
 	P=np.append(P,0)
-	matrices=np.append(matrices,[0,0,0,0,0,0]).reshape(number_functions,6)
+	matrices=np.append(matrices,[0,0,0,0,0,0]).reshape(number_functions,6) #adds new function data
 	
+	#adds new line for "line" objects representing the quadrilateral formed by the linear function configuration
 	quads=quads+[[0,0,0,0]]
 	
 	a=tick
 	
 	
-	
+	#adds new entry string variables to function_entries, adds new entry widgets to func
 	for j in range(6):
         	s_var=Tkinter.StringVar()
         	function_entries.append(s_var)
        		func.append(Tkinter.Entry(frame, width="5", textvariable = s_var, bg=square_count[number_functions-1]))
 		func[-1].grid(row=number_functions+4,column=j+1)
-
+		
+	#generates new label for latest function
 	FunctionLabels=FunctionLabels+[Tkinter.Label(frame,text="f"+str(number_functions))]
 	FunctionLabels[-1].grid(row = 4+number_functions, column= 0)
 
+	#generates new probability entry, and adds new element to probability matrix
 	V=Tkinter.StringVar()
 	probEntry.append(V)
 	prob.append(Tkinter.Entry(frame, width= "5", textvariable = V))
 	V.set(P[number_functions-1])
 	prob[-1].grid(row=number_functions+4,column=7)	
 	
+	#makes newest function, creates a square for it, removes latest configuration of identity square creation
 	tick_number.set(number_functions-1)
 	create_case()
 	records.pop()
 
-	matrices[number_functions-1]=np.array([0,0,0,0,0,0])
+	#turns square into point, so it does not appear as image of an identity function
+	matrices[number_functions-1]=np.array([0,0,0,0,0,0]) #gives configuration for point, sets entries all to 0
 	for j in range(6*(number_functions-1),6*number_functions):
 		function_entries[j].set(0)
-	entry_case()
-	reset_entries(number_functions-1)
-	tick_number.set(a)
-	records.pop()
+	entry_case() #makes indentity square into point
+	reset_entries(number_functions-1) 
+	tick_number.set(a) #changes tick back to its original value
+	records.pop() #remove  latest configuration for undoing records
 	print records[-1]
 
 	return 1
-
+# removes a function entry line from the entry frame
 def remove_function():
 	global matrices
 	global quads
@@ -511,73 +518,90 @@ def remove_function():
 	global front_records
 	global P
 
+	#must maintain at least two function entriy lines
 	if number_functions==2:
 		return 1
 	
+	# set number of functions to 1 less, delete the square representing last function in IFS
 	number_functions-=1
 	canvas.delete(quads[-1][0])
 	canvas.delete(quads[-1][1])
 	canvas.delete(quads[-1][2])
 	canvas.delete(quads[-1][3])
 
-	quads.pop()
-	matrices=matrices[0:-1]
-	FunctionLabels[-1].destroy()
-	FunctionLabels.pop()
+	quads.pop() #delete label names for last square
+	matrices=matrices[0:-1] #remove last row in function entry data
+	
+	FunctionLabels[-1].destroy() #remove function label in window
+	FunctionLabels.pop() 
 
-	probEntry.pop()
+	probEntry.pop() #remove last probablity entry widget
 	prob[-1].destroy()
-	prob.pop()
-	P=P[0:-1]
+	prob.pop() #remove probability data for last function
+	P=P[0:-1] 
+	
+	#remove function entries and records of them
 	for k in range(6):
 		func[-1].destroy()
 		function_entries.pop()
 		func.pop()
 
 	
-
+	# add function removal to records, since this can change the IFS
 	records=records+[[temporary_matrix(), P,number_functions]]
+	# set front records to empty since you just made latest action
 	front_records=[]
 	print len(records), ',', len(front_records)
 
+# Function that undoes any configuration. 
 def undo_transformation():
 	global matrices
 	global records
 	global front_records
 	global number_functions
 
+	#can't undo if you're at the beginning
 	if len(records)==1: return 1
 
+	#adds latest configuration to front_records, in case user wants to redo transformation
 	F=front_records+[records[-1]]
+	
+	#removes last configuration from record history
 	records.pop()
 
+	# this is to show that the record changes were successful
 	print " \n"
 
 	print " "
 	print number_functions, ',', records[-1][2]
 
+	#If the previous configuration had more functions, add whatever function lines are necessary
 	while number_functions<records[-1][2]:
 		print "yes"
 		add_function()
 		#records.pop()
-
+		
+	#If they are less, remove functions, but also erase history of removal, since function removal adds to the record
 	while number_functions > records[-1][2]:
 		print "no"
 		remove_function()
 		records.pop()
 
+	#change data to match previous configuration
 	matrices=records[-1][0]
 	P=records[-1][1]
 
+	#set entries to previous configuration
 	for i in range(number_functions):
 		for j in range(6):
 			function_entries[6*i+j].set(matrices[i][j])
 
 	
-	
+	# change squares to match entry configuration, but remove history of entry change.
 	entry_case()
 	records.pop()
 	
+	#set front records to have data of undone transformation
 	front_records=F
 	
 	#for j in range(number_functions):
@@ -590,13 +614,18 @@ def undo_transformation():
 	print len(records), ',', len(front_records)
 	return 1
 
+# If user wants to redo something undone, this function is called
 def redo_transformation():
 	global matrices
 	global records
 	global front_records 
 	global number_functions
 
+	#can't redo something if there is nothing to redo
 	if front_records==[]: return 1
+	
+	#set A to be the last undone configuration which was recorded in front_records
+	# let F be used as a place-holder for front_records, since later functions will make front_records empty
 	A=front_records[-1]
 	F=[]
 	for a in front_records[0:-1]:
@@ -606,12 +635,14 @@ def redo_transformation():
 
 	print "length of front records is ", len(front_records)
 
+	#Simlar to undo case, if last configuration undone has more functions, add as many as necessary
 	while number_functions<A[2]:
 		print number_functions, ',', A[2]
 		print "yes"
 		add_function()
 		#records.pop()
-
+		
+	# otherwise, if less, remove functions, and remove record history of function removal
 	while number_functions > A[2]:
 		print number_functions, ',', A[2]
 		print "no"
@@ -620,16 +651,19 @@ def redo_transformation():
 
 	print "length of F is ", len(F), len(records)
 
+	#set front_records to F, which preserved the undo history that we wanted
 	front_records=F
+	
+	# set data configurations
 	matrices=A[0]
 	P=A[1]
 
+	#change entry values
 	for i in range(number_functions):
 		for j in range(6):
 			function_entries[6*i+j].set(matrices[i][j])
 
-	
-	
+	#change squares to mathc entries, but remove record history
 	entry_case()
 	records.pop()
 	
@@ -639,6 +673,7 @@ def redo_transformation():
 
 	return 1	
 
+# a function call to save IFS data, so that you can recall it after having closed the IFS editor
 def save_IFS():
 	global function_name
 	global Function_window

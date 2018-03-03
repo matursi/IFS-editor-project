@@ -15,7 +15,7 @@ import os
 #	H: height of screens in pixels
 # 	FractalOriginX: gives starting X point of attractor from range of 0 to 1
 # 	FractalOriginY: gives starting Y point of attractor from range of 0 to 1
-# 	ScalingX and Scaling Y: scales attractors from calculate coordinates to pixel friendly coordinates
+# 	ScalingX and ScalingY: scales attractors from calculate coordinates to pixel friendly coordinates
 #	Axis X and Axis Y: gives number of units from left to right, top to bottom of cartesian plane
 
 #	window: a window widget for setting up IFS
@@ -60,31 +60,41 @@ scalingY=50
 AxisX= 10.0
 AxisY= 10.0
 
+#creates window for the Iterated function Editor with the default width and height specifications.
+#TKinter.Canvas enables space where graphic activity occurs
 window= Tkinter.Tk()
 window.title("Iterated Function System Editor")
+canvas = Tkinter.Canvas(window, width=W, height=H, background="black")
+
+#creates window where attractor will appear
 FractalWindow= Tkinter.Toplevel()
 FractalWindow.title("Attractor")
 fractalCanvas = Tkinter.Canvas(FractalWindow, width=W, height=H, background="black")
 
 
-canvas = Tkinter.Canvas(window, width=W, height=H, background="black")
-
-
-
+# Create frame for IFS window.  Frames allow the grouping of different kinds of "widgets" into more complex formats.
+# this frame will be on the top, with color gray85, and borderwidth = 0
 frame2=Tkinter.Frame(window,background="gray85", bd=0)
+
+#Create frames where entries and scrollbar will appear.  
 widgetCanvas=Tkinter.Canvas(frame2,borderwidth=0, bg="gray85",height = 75)
+
+#frame specifically for the entries
 frame=Tkinter.Frame(widgetCanvas,background="gray85",bd=0)
 frame.rowconfigure(1, weight=1)
 frame.columnconfigure(1, weight=1)
+
+#make scrollbar: this is to keep the size of the IFS window the same, but to allow for more functions in IFS
 scroll=Tkinter.Scrollbar(frame2, orient="vertical", command=widgetCanvas.yview)
 
-
+#configure command for scrolling, place it on left hand side of entries general frame
 widgetCanvas.configure(yscrollcommand=scroll.set)
 widgetCanvas.create_window((0,0), window=frame, anchor="nw")
 frame2.grid_rowconfigure(0, weight=1)
 frame2.grid_columnconfigure(0, weight=1)
 
 
+#make entire region of canvases visible (otherwise real window size is smaller than height and width specified)
 def onFrameConfigure(Canvas_X):
 	Canvas_X.configure(scrollregion=Canvas_X.bbox("all"))
 
@@ -93,6 +103,7 @@ frame.update_idletasks()
 
 #widgetCanvas.configure(scrollregion=frame.bbox("all"), height =100)
 
+#make a box that shows coordinates of point where mouse is on the cartesian plane in IFS editor
 coords = Tkinter.Label(window, width="10")
 
 
@@ -114,27 +125,37 @@ global Pythagorean_tree
 global Snowflake
 global serpinski_carpet
 
-
+# sets initial number of functions in IFS
 number_functions=4
 
 matrices=np.zeros((4,6))
 
-#gives probabilities for each iterated function in pdf form.  The Default is 1/4 for each vector
+#gives probabilities for each iterated function in p.d.f. form.  The Default is 1/4 for each vector
 
 P=[0, 0, 0, 0]
 
-
+# gives x coordinates, y coordinates, and colors of points in attractor
 XYC=[[],[],[]]
+
+#latest IFS configurations.  If you undo from records, will record the last bit before the undoing and will be used
+#if you want to redo a previously undone actions
 front_records=[]
+
+#records will contain a history of all configurations.  (This is to allow undoing and redoing
 records=[[np.zeros((4,6)),P,number_functions]]
 
-
+# gives colors of squares giving graphic representation of IFS
 square_count={0:'#00FFFF', 1:'#FF00FF', 2:'#FFFF00', 3: '#90FF00',
 		4:'#FF9000', 5:'#00FF90', 6:'#0090FF', 7:'#9000FF'}
 
+#tracks position of mouse on x and y axes of canvas when clcking on an object
 drag_data = {"x": 0, "y": 0, "item": None}
 
+#when using create button, tick tells which function to make into "idenity" function, represented by square.
+# tick = n makes n+1 ^th function identity.  
 tick=0
+
+# quads will contain info on graphic representations of functions
 quads =[[0,0,0,0],
 	[0,0,0,0],
 	[0,0,0,0],
@@ -145,30 +166,33 @@ quads =[[0,0,0,0],
 #number of points to be generated, default set at 10000
 pointnum=10000;
 
-
+#colors that will be used throughout
 colors=["red","green","yellow","orange"]
 
-#a collection of sample fractals
+#a collection of sample fractals.  These will be loaded into the IFS window
+
+#Barnsley fern
 Barnsley=[[0.85, 0.04,-0.04,.85,0,1.6], #lists linear transformations, 
 	[0.2,-0.26,0.23,0.22,0,1.60],	#values 1,2, 5 give a,b,c with a*x+b*y +c = new_x
 	[-0.15,0.28,0.26,0.24,0,0.44],	#values 3,4, 6 give a,b,c with a*x+b*y +c = new_y
-	[0,0,0,.16,0,0], [85,7,7,1]]   	 
+	[0,0,0,.16,0,0], [85,7,7,1]]   	 #The last line gives relative probabilities
 					
-
+#Serpinski triangle
 Triangle=[[0.5,0,0,0.5,0,0],
 	[0.5,0,0,0.5,0.5, 0],
 	[0.5,0,0,0.5,0.25,sqrt(3)*0.25],[1,1,1]]
 
+# Pythagorean tree
 Pythagorean_tree=[[0,0,0,1.0/3,-0.5,-1],
 		[0.5,-0.5,0.5,0.5,-1,0.5],
 		[0,0,0,0,0,0],
 		[0.5,0.5,-0.5,0.5,0.5,0], [1,2,0,2]]
-
+# Koch snowflake (with four functions)
 snowflake=[[1.0/3,0,0,1.0/3,0,0],
 		[1.0/3,0,0,1.0/3,2.0/3,0],
 		[-1.0/6,sqrt(3)/6,sqrt(3)/6,1.0/6,2.0/3,0],
 		[-1.0/6,-sqrt(3)/6,-sqrt(3)/6,1.0/6,0.5,sqrt(3)/6],[1,1,1,1]]
-
+# seprinski carpet
 serpinski_carpet=[[1.0/3, 0 , 0, 1.0/3 , 1, 0],
 		[1.0/3, 0 , 0, 1.0/3 , 1, 1],
 		[1.0/3, 0 , 0, 1.0/3 , 0, 1],
@@ -178,30 +202,33 @@ serpinski_carpet=[[1.0/3, 0 , 0, 1.0/3 , 1, 0],
 		[1.0/3, 0 , 0, 1.0/3 , 0, -1],
 		[1.0/3, 0 , 0, 1.0/3 , 1, -1], [1,1,1,1,1,1,1,1]]
 
+#function calls for generations of sample functions.  I will document only the Barnsley fern, but the others have
+#similar configurations
 
 def barnsley_fern():
-	global P
-	while number_functions < 4:
+	global P #take in Probability vector, to change values
+	while number_functions < 4: #This adds missing function entries if the current amount is less than 4
 		add_function()
-	m=Barnsley[0:4]
-	P=Barnsley[4]+[0]*(number_functions-4)
-	originsX.set(0.5)
+	m=Barnsley[0:4]  #The matrix representing configuration of barnsley fern
+	P=Barnsley[4]+[0]*(number_functions-4) # changes probability entries.  If number_functions > 4, probabilities of the
+						# fifth and beyond functions is set to 0
+	originsX.set(0.5)		#gives starting x,y pixel coordinates of attractor.  
 	originsY.set(0.9)
-	Xscale.set(50)
+	Xscale.set(50)			#gives scale for sizing the barnsley fern
 	Yscale.set(50)
-	for i in range(4):
+	for i in range(4):		#creates 4 unit squares, but does not record them in record history
 		create_case()
 		records.pop()
-	for i in range(24):
+	for i in range(24):		#provides barnsley fern configuration for entries in first few functions
 		function_entries[i].set(m[i/6][i%6])
-	for j in function_entries[24:]:
+	for j in function_entries[24:]: #sets entries of other functions to 0
 		j.set(0)
 	
 	
-	for i in range(number_functions):
+	for i in range(number_functions): #sets probability entries with new probabilities
 		probEntry[i].set(P[i])
 	entry_case()
-	for i in range(number_functions):
+	for i in range(number_functions): #
 		reset_entries(i)
 	#records=records+[[m, P, number_functions]]
 	
@@ -320,14 +347,18 @@ def carpet():
 	#records=records+[[m, P,number_functions]]
 	#front_records=[]
 
+# this function will be used as part of the process of saving functions.  It creates a window where you can enter the name of
+# the fractal you generated in the attractor and save the image.
 def generate_image():
-	global save_entry
-	global image_save_window
-	image_save_window=Tkinter.Toplevel()
-	picture_name=Tkinter.StringVar()
-	picture_name.set("fractal.png")
+	global save_entry #name of entry widget
+	global image_save_window #name of save window
+	image_save_window=Tkinter.Toplevel() #creates window for inputting name of function and saving.
+	picture_name=Tkinter.StringVar() #creates name of of string accessed in save_entry
+	picture_name.set("fractal.png") #sets default name as fractal.png
 	save_entry=Tkinter.Entry(image_save_window,width="15",textvariable=picture_name)
-	save_button=Tkinter.Button(image_save_window, text= "Save",command=save_picture)
+	save_button=Tkinter.Button(image_save_window, text= "Save",command=save_picture) #calls the save_picture function
+											#defined below
+	#puts entry space for name and save button into window
 	save_entry.pack()
 	save_button.pack()
 		
@@ -339,24 +370,33 @@ def generate_image():
 	#plt.show()
 
 def save_picture():
-	global save_entry
+	global save_entry #calls in save_entry and image_save_window
 	global image_save_window
-	fractalCanvas.postscript(file=save_entry.get(), colormode='color')
+	fractalCanvas.postscript(file=save_entry.get(), colormode='color') #gets name inside save_entry that user typed
+									#which will be used as name of image file
+	#gives name of image, with coordinates in RGB form, and width and height default
 	save_image=Image.new("RGB",(W,H))
 	draw=ImageDraw.Draw(save_image)
+	
+	#converts [0,1] coordinates into pixel coordinates
 	startingX=float(start_X_point.get())*W
 	startingY=float(start_Y_point.get())*H
-	for i in range(len(XYC[0])):
-		x=startingX+float(scale_X_point.get())*XYC[0][i]
-		y=startingY-float(scale_X_point.get())*XYC[1][i]
-		draw.point([x,y],XYC[2][i])
+	for i in range(len(XYC[0])): #draws each point in the attractor
+		x=startingX+float(scale_X_point.get())*XYC[0][i]  #x values are left to right.
+		y=startingY-float(scale_X_point.get())*XYC[1][i] #y values are up to down, hence subtraction
+		draw.point([x,y],XYC[2][i]) #draws point of cover
 
-	save_image=ImageEnhance.Color(save_image).enhance(1.0)
+	save_image=ImageEnhance.Color(save_image).enhance(1.0)  #image enhancements to make picture look more like that
+								# of the image in the attractor
 	save_image=ImageEnhance.Sharpness(save_image).enhance(1.5)
+	
+	#saves image and then closes save window
 	filename=save_entry.get()
 	save_image.save(filename)
 	image_save_window.destroy()	
 
+# creates a menu in the attractor window that contains buttons, which when pressed, will give the configuration of the
+# chosen fractal in the IFS window. 
 samples=Tkinter.Menubutton(FractalWindow, text="samples")
 samples.menu=Tkinter.Menu(samples, tearoff = 0)
 samples["menu"]=samples.menu
@@ -366,13 +406,14 @@ samples.menu.add_command(label="Pythagorean Tree", command = pyth_tree)
 samples.menu.add_command(label="Koch Curve", command = koch_curve)
 samples.menu.add_command(label="Serpinski Carpet", command=carpet)
 
+# Adds a "file" menu in the attractor window, where you can save pictures
 File=Tkinter.Menubutton(FractalWindow, text= "File")
 File.menu=Tkinter.Menu(File, tearoff = 0)
 File["menu"]=File.menu
 File.menu.add_command(label="Save as picture", command=generate_image)
 
 
-#entries for the probabilities of linear transformations
+# puts entries for the probabilities of linear transformations in entry frame
 probEntry=[]
 prob=[]
 for i in range(4):

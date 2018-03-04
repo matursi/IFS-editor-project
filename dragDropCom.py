@@ -1,5 +1,5 @@
 import Tkinter as tk
- 
+#This is not my own code.  I got it from elsewhere to teach me how to use TKinter for dragging items 
 class SampleApp(tk.Tk):
     '''Illustrate how to drag items on a Tkinter canvas'''
  

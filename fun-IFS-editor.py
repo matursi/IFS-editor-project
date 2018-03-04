@@ -673,31 +673,40 @@ def redo_transformation():
 
 	return 1	
 
-# a function call to save IFS data, so that you can recall it after having closed the IFS editor
+# a function call to save IFS data, so that you can recall it after having closed the IFS editor.  
+# This function in particular opens the save window
 def save_IFS():
-	global function_name
-	global Function_window
+	global function_name #name given to IFS configuration
+	global Function_window #name of window
 
+	#create save window and entry variable
 	Function_window=Tkinter.Toplevel()
 	function_name=Tkinter.StringVar()
-	function_name.set("function")
+	function_name.set("function") #give default name as "function"
 	save_entry=Tkinter.Entry(Function_window,width="15",textvariable=function_name)
 	savef_button=Tkinter.Button(Function_window, text= "Save",command=save_function)
 	save_entry.pack()
 	savef_button.pack()
 		
 	return 1
-
+# function call to save a function.  The saved functions go into a file
 def save_function():
-	global function_name
+	global function_name #name of function
 	global number_functions
-	global Function_window
+	global Function_window # function window that was created with save_IFS
 	print 1
+	
+	#the following makes sure that function names form a single string
 	A=function_name.get()
 	print A
 	#for i in range(A):
 	#	if A[i]==' ': A[i]='_'
 
+	#records function data: 
+	#function_data contains the name and the number of functions in the IFS, 
+	#the function data, and the probabilities for each function in the IFS.
+	# these data points are separated by a space, which is why the function name should be a single string.
+	
 	function_data=[A+' ', str(number_functions)+' ']
 	for a in function_entries:
 		function_data=function_data+[str(a.get())+' ']
@@ -705,14 +714,18 @@ def save_function():
 		function_data=function_data+[str(b.get())+' ']
 	
 	print function_data
+	#Opens the saved function data file, 
 	lines = open("Iterated_Function_Systems.txt", 'r').readlines()
 	check=0
+	
+	#checks if IFS name was already used: if so, replaces old function data line with new one
 	for i in range(len(lines)):
 		if lines[i].split()[0]==A:
 			lines[i]=''.join(tuple(function_data+['\n']))
 			check=1
 			break
 	
+	#writes new function data line into function, or overwrites file with edited data line
 	if check==0:
 		fo=open("Iterated_Function_Systems.txt",'a')
 		fo.writelines(function_data+['\n'])
@@ -723,15 +736,18 @@ def save_function():
 		fo.close()
 		os.rename("Iterated_Function_Systems_tmp.txt","Iterated_Function_Systems.txt")
 		
-
+	#closes save window
 	Function_window.destroy()
 	return 1
 
+#Creates loading window for loading IFSs.  
+# type in the name of an IFS, and it will change the IFS configuration of the editor to 
+# the configuration you loaded.
 def load_IFS():
-	global names
-	global Load_function_window
-	global line_data
-	global load_entry_instance
+	global names			 #list of names of functions
+	global Load_function_window 	 #name of load window
+	global line_data 		 #lines of currently saved IFS data
+	global load_entry_instance	 #stringvar containing load IFS name
 	line_data=open("Iterated_Function_Systems.txt",'r').readlines()
 	names=[]
 	for line in line_data:
@@ -739,14 +755,20 @@ def load_IFS():
 	Load_function_window=Tkinter.Toplevel()
 	print names
 	
+	#creates a frame containing the names of available saved functions
 	function_big_grid=Tkinter.Frame(Load_function_window,background="white", bd=1)
 	function_canvas=Tkinter.Canvas(function_big_grid,borderwidth=0,bg="white", height=150,width=450)
+	
+	#enables creation of grid where labels containing names will be placed
 	function_grid=Tkinter.Frame(function_canvas,background="white", bd = 0)
 	function_grid.rowconfigure(1,weight=1)
 	function_grid.columnconfigure(1,weight=1)
+	
+	#creates scrollbars to scroll through IFS names
 	name_vscroll=Tkinter.Scrollbar(function_big_grid, orient="vertical",command=function_canvas.yview)
 	name_hscroll=Tkinter.Scrollbar(function_big_grid,orient="horizontal",command=function_canvas.xview)
 
+	#enables function of both scrollbars
 	function_canvas.configure(yscrollcommand=name_vscroll.set,xscrollcommand=name_hscroll.set)
 	function_canvas.create_window((0,0), window=function_grid,anchor="nw")
 	function_big_grid.grid_rowconfigure(0,weight=1)
@@ -755,28 +777,33 @@ def load_IFS():
 	function_grid.bind("<Configure>", lambda event, Canvas_X=function_canvas: onFrameConfigure(Canvas_X))
 	function_grid.update_idletasks()
 
-	name_entry_strings=[]
-	name_entries=[]
+	name_entry_strings=[] 	#list of stringvars for entries of labels
+	name_entries=[]		# list of labels containing IFS names
+	
 	for i in range(len(names)):
 		name_entry_strings=name_entry_strings+[Tkinter.StringVar()]
 		name_entries=name_entries+[Tkinter.Label(function_grid, width="20",textvariable=name_entry_strings[i])]
 		name_entry_strings[i].set(names[i])
-		name_entries[-1].grid(column=i%3, row=int(i/3))
+		name_entries[-1].grid(column=i%3, row=int(i/3)) #layer names into three columns
 
+	#puts grid into windows, with visible dimensions set
 	function_big_grid.grid(row=0,column=0, columnspan=3, sticky="nsew")
 	function_canvas.grid(row=0,column=0,rowspan=3,sticky="we")
 	function_grid.place()
 	name_vscroll.grid(row=0,column=1,sticky="ns")
 	name_hscroll.grid(row=1,column=0, columnspan=2,sticky="ew")
 
+	#creates entry for loading IFS name
 	load_entry_instance=Tkinter.StringVar()
 	load_entry=Tkinter.Entry(Load_function_window,width="20",textvariable=load_entry_instance)
 	load_entry.grid(row=1,column=1)
 	
+	#creates load button for load window
 	load_button=Tkinter.Button(Load_function_window, text="load IFS", width="20",command=load_function)
 	load_button.grid(row=2,column=1)
 	return 1
 
+#call function for loading IFS
 def load_function():
 	global names
 	global load_entry_instance
@@ -788,7 +815,9 @@ def load_function():
 	global matrices
 	global P
 
-	chosen_name=load_entry_instance.get()
+	chosen_name=load_entry_instance.get() #name of desired IFS
+	
+	#Gives error if chosen name not in list of saved IFS data
 	warning_1_box=Tkinter.Text(fg="red")
 	warning_1_box.tag_config("t",wrap="word",justify="center")
 	if chosen_name not in names:
@@ -797,17 +826,19 @@ def load_function():
 		warning_1_box.grid(row=3,sticky="ew")
 
 	else:
-		warning_1_box.forget()
-		i=names.index(chosen_name)
-		function_data=line_data[i].split(' ')
-		nf=int(function_data[1])
+		warning_1_box.forget()		#gets rid of warning_1_box, since there is no need for error
+		i=names.index(chosen_name)	# locates inserted name among the IFS saved data lines
+		function_data=line_data[i].split(' ')  #numerical data for IFS
+		nf=int(function_data[1])		#number of functions for IFS
 
-		while number_functions < nf:
+		while number_functions < nf:  #changes number of functions to those of chosen IFS
 			add_function()
 		while number_functions > nf:
 			remove_function()
 			records.pop()
 		print function_data
+		
+		#change IFS data, change entries for probabilities and IFS data
 		for i in range(number_functions):
 			for j in range(6):
 				matrices[i][j]=float(function_data[2+6*i+j])
@@ -815,10 +846,16 @@ def load_function():
 			P[i]=float(function_data[2+6*number_functions+i])
 			probEntry[i].set(P[i])
 
+		#change squares representing IFS data, empty undo history
 		entry_case()
 		print len(records)
 		front_records=[]
 	return 1
+
+#these were functions that I wanted to create before I got too busy with school work.
+#rotation settings would have allowed different loci for rotation, for example,
+#color settings would have allowed for different color combinations to come up when
+#the attractor is generated. 
 
 def rotation_settings():
 	return 1
@@ -832,6 +869,7 @@ def skew_settings():
 def color_settings():
 	return 1
 
+# creates a menu in the IFS window containing buttons to call several functions
 options=Tkinter.Menubutton(window,text="Options")
 options.menu=Tkinter.Menu(options, tearoff=0)
 options["menu"]=options.menu
@@ -842,7 +880,7 @@ options.menu.add_command(label="remove function",command = remove_function)
 options.menu.add_command(label="save IFS", command= save_IFS)
 options.menu.add_command(label="load IFS", command = load_IFS)
 
-
+#creates a menu for transformation settings (which I didn't define yet)
 formatting=Tkinter.Menubutton(window, text="format")
 formatting.menu=Tkinter.Menu(formatting, tearoff=0)
 formatting["menu"]=formatting.menu
@@ -854,13 +892,13 @@ formatting.menu.add_command(label="color settings", command=color_settings)
 
 def motion(event): #monitors current location of mouse in cartesian coordinates
 	x,y= event.x, event.y
-	AxisX=float(AxisX_entry.get())
+	AxisX=float(AxisX_entry.get())  #gets x and y axis ranges to provide correct cartesian coordinates
 	AxisY=float(AxisY_entry.get())
-	coordinates = "%.2f , %.2f" %((x-W/2)*AxisX/W,(-y+H/2)*AxisY/H)
+	coordinates = "%.2f , %.2f" %((x-W/2)*AxisX/W,(-y+H/2)*AxisY/H) #calculates cartesian coordinates
 
 	#drag_data["item"] = canvas.find_closest(event.x, event.y)[0]
         
-	coords.configure(text = coordinates)
+	coords.configure(text = coordinates) #shows the coordinate point on the bottom left of the plane
 	
 
 def clear(): #clears all squares in the plane
@@ -872,23 +910,25 @@ def clear(): #clears all squares in the plane
 	
 
 	canvas.delete("square")
-	quads =[[0,0,0,0]]*number_functions
-	P=[0]*number_functions
-
+	quads =[[0,0,0,0]]*number_functions #makes line markers all 0
+	
+	#set all data to 0
+	P=[0]*number_functions 
 	matrices=np.zeros((number_functions,6))
 
+	#set all entries to 0
 	for i in range(6*number_functions):
 		function_entries[i].set(0)
-
+		
 	for i in range(number_functions):
 		prob[i].set(0)
 	
+	#transformation buttons are all made gray, with grey highlighting, to show none is activated
 	create_square.configure(bg="gray85")
 	stretch_square.configure(bg="gray85")
 	move_square.configure(bg="gray85")
 	skew_square.configure(bg="gray85")
 	rotate_square.configure(bg="gray85")
-
 
 	create_square.configure(activebackground="#ececec")
 	stretch_square.configure(activebackground="#ececec")
@@ -896,16 +936,19 @@ def clear(): #clears all squares in the plane
 	skew_square.configure(activebackground="#ececec")
 	rotate_square.configure(activebackground="#ececec")
 
+	#updates records
 	records=records+[[np.zeros((number_functions,6)), P, number_functions]]
 	front_records=[]
 
 
 def create_case(): #makes a new square, 
-		#or resets the square of some color to the unit square
+		   #or resets the square of some color to the unit square
 	
+	#color change will show that square creation was activated
 	create_square.configure(bg="gold")
-
 	create_square.configure(activebackground="light goldenrod")
+	
+	#all other transformations are made grey in highlighting
 	stretch_square.configure(activebackground="#ececec")
 	move_square.configure(activebackground="#ececec")
 	skew_square.configure(activebackground="#ececec")
@@ -916,7 +959,7 @@ def create_case(): #makes a new square,
 	global records 
 	global front_records
 
-	tick=tick_number.get()
+	tick=tick_number.get() #gets number designating which function you want to set to unit square
 
 	#deletes old rectangle
 
@@ -925,7 +968,8 @@ def create_case(): #makes a new square,
 	canvas.delete(quads[tick][2])
 	canvas.delete(quads[tick][3])
 
-	#creates new unit square in place of the old rectangle
+	#creates new unit square in place of the old rectangle.
+	#Quads becomes a list containing data on the bottom line of the square
 	quads[tick]=[canvas.create_line(W/2, H/2, W/2+W/AxisX, H/2, 
 		fill=square_count[tick], tags= ["square",tick, "bottom line"] ),
 	canvas.create_line(W/2+W/AxisX, H/2, W/2+W/AxisX, H/2-W/AxisY, 
@@ -934,11 +978,13 @@ def create_case(): #makes a new square,
                 fill=square_count[tick], tags= ["square", tick, "top line"] ),
 	canvas.create_line(W/2, H/2 -W/AxisY, W/2, H/2, fill=square_count[tick], tags= ["square",tick, "left line"]) ]
 
+	#sets up identity data and modifies entries
 	matrices[tick]=[1,0,0,1,0,0]
 	for i in range(6):
 		function_entries[6*tick+i].set(matrices[tick][i])
 
-	
+	#changes the tick by one.  This is to enable several repeated clicks at a time making new functions squares
+	#without changing the tick mark manually
 	tick=(tick+1)%number_functions
 	tick_number.set(tick)
 
@@ -948,7 +994,8 @@ def create_case(): #makes a new square,
 	print records[-1]
 	print front_records
 	
-def stretch_case(): #indicates choice to set transformations on canvas to stretch
+def stretch_case(): #indicates choice to set transformations on canvas to stretch:
+	#non grey colors represent on a button indicate which transformation you will activate if you click on a square
 	create_square.configure(bg="gray85")
 	stretch_square.configure(bg="LightBlue2")
 	move_square.configure(bg="gray85")
@@ -1010,7 +1057,7 @@ def entry_case(): #changes linear transformations by changing the entries
 	global records
 	global front_records
 
-	change_coordinates()
+	change_coordinates() #changes coordinates of squares to those in the entries
 
 		
 	records=records+[[temporary_matrix(), P, number_functions]]
@@ -1018,14 +1065,14 @@ def entry_case(): #changes linear transformations by changing the entries
 	print records[-1]
 	print len(records)
 
-def temporary_matrix():
+def temporary_matrix(): #turns function_entries data into numerical matrix form
 	global number_functions
-	global tick
+	#global tick
 
 	temp=np.zeros((number_functions,6))
 
 	for i in range(number_functions):
-		a=tick
+		#a=tick
 		for j in range(6):
 			temp[i][j]=float(function_entries[6*i+j].get())
 
@@ -1034,7 +1081,7 @@ def temporary_matrix():
 		#	create_case()
 		#	for j in range(6):
 		#		function_entries[6*i+j].set(temp[i][j])
-		tick=a
+		#tick=a
 
 	return temp
 
@@ -1076,10 +1123,9 @@ def change_coordinates():
 		reset_entries(i)
 		tick=a
 
-def clickDown(event): #finds closest line or corner of rectangle
+def clickDown(event): #finds closest line or corner of rectangle.  
+		#This is to be able to transform graphically a single function without affecting the others
 
-	
-	
 	drag_data["item"] = list(Tkinter.Canvas.find(canvas,'closest',event.x,event.y))[0]
        	drag_data["x"] = event.x
        	drag_data["y"] = event.y

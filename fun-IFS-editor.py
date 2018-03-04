@@ -1091,15 +1091,15 @@ def change_coordinates():
 	global P
 	global records
 
-	AxisX=float(AxisX_entry.get())
+	AxisX=float(AxisX_entry.get())		#gets axis data.  Axes can also be changed
 	AxisY=float(AxisY_entry.get())
-	for i in range(number_functions):
+	for i in range(number_functions):	#gets new entry data and changes current data to that of input
 		a=tick
 		new_vals=[]
 		for j in range(6):
 			new_vals=new_vals+[float(function_entries[6*i+j].get())]
 
-		if quads[i]==[0,0,0,0]:
+		if quads[i]==[0,0,0,0]:		#if there is no square, create a new one
 			tick=i
 			create_case()
 			records.pop()
@@ -1107,6 +1107,7 @@ def change_coordinates():
 				function_entries[6*i+j].set(new_vals[j])
 		
 
+		#gives coordinates in pixel form
 		Tx=new_vals[4]*W/AxisX +W/2
 		Ty=-new_vals[5]*H/AxisY +H/2
 		Dx1=new_vals[0]*W/AxisX
@@ -1114,13 +1115,14 @@ def change_coordinates():
 		Dx2=new_vals[2]*W/AxisX
 		Dy2=-new_vals[3]*H/AxisY
 		
+		#gives coordinates of each line of the square
 		canvas.coords(quads[i][0],Tx,Ty,Tx+Dx1,Ty+Dy1)
 		canvas.coords(quads[i][1],Tx+Dx1,Ty+Dy1,Tx+Dx1+Dx2,Ty+Dy1+Dy2)
 		canvas.coords(quads[i][2],Tx+Dx1+Dx2,Ty+Dy1+Dy2,Tx+Dx2,Ty+Dy2)
 		canvas.coords(quads[i][3],Tx+Dx2,Ty+Dy2,Tx,Ty)
 	
 
-		reset_entries(i)
+		reset_entries(i) #changes matrix data to that of new entries
 		tick=a
 
 def clickDown(event): #finds closest line or corner of rectangle.  
@@ -1131,22 +1133,22 @@ def clickDown(event): #finds closest line or corner of rectangle.
        	drag_data["y"] = event.y
 	
 
-def reset_entries(m):  #resets the matrix entries according to transformations
+def reset_entries(m):  #resets the matrix entries according to transformations (this is called for any transformation)
 	global AxisX
 	global AxisY	
 	global matrices
 	global P
 
-	AxisX=float(AxisX_entry.get())
+	AxisX=float(AxisX_entry.get()) #gets axes ranges
 	AxisY=float(AxisY_entry.get())
 
-	matrices[m]=vector_vals(m)
-	P[m]=float(prob[m].get())
+	matrices[m]=vector_vals(m) 	#changes IFS data in pixel form to that of vector form
+	P[m]=float(prob[m].get())	#gets probability of entry
 
-	for i in range(6):
+ 	for i in range(6):		#sets new transformation data
 		function_entries[6*m+i].set(matrices[m][i])		 
 
-def vector_vals(m):
+def vector_vals(m): #changes IFS data from pixel form to coordinate vector form
 	return np.array([(canvas.coords(quads[m][0])[2]-canvas.coords(quads[m][0])[0])*AxisX/W,
 		-(canvas.coords(quads[m][0])[3]-canvas.coords(quads[m][0])[1])*AxisY/H,
 		-(canvas.coords(quads[m][3])[2]-canvas.coords(quads[m][3])[0])*AxisX/W,
@@ -1155,17 +1157,18 @@ def vector_vals(m):
 		-(canvas.coords(quads[m][0])[1]-H/2)*AxisY/H,])
 	
 
-def holdButtonDown(event): #defines transformations for each case
+def holdButtonDown(event): #defines transformations for each case when you click and hold mouse button down
 
-	if move_square['bg']=="green3" and drag_data["item"] not in [1,2]:
+	if move_square['bg']=="green3" and drag_data["item"] not in [1,2]: 
+	#second condition prevents actual axes lines from being dragged
 	#translates chosen rectangle in the direction of the mouse
 
-		m=int(canvas.gettags(drag_data["item"])[1])
+		m=int(canvas.gettags(drag_data["item"])[1]) #gets drag data from closest square m
 		delta_x = event.x - drag_data["x"]
         	delta_y = event.y - drag_data["y"]
 		n = drag_data["item"]%4
 
-		for i in range(4):	
+		for i in range(4):	#moves all four lines of square
         		canvas.move(quads[m][i], delta_x, delta_y)
 
 		matrices[m][4]=matrices[m][4]+delta_x*AxisX/W
@@ -1177,14 +1180,15 @@ def holdButtonDown(event): #defines transformations for each case
         	drag_data["y"] = event.y
 
 	elif stretch_square['bg']=="LightBlue2": 
-	#stretches transformation in vertical and horizontal directions, may give diagonal direction as well
+	#stretches transformation in "vertical" and "horizontal" directions, 
 
 		if  drag_data["item"] not in [1,2]:
 			m=int(canvas.gettags(drag_data["item"])[1])
 			delta_x = event.x - drag_data["x"]
         		delta_y = event.y - drag_data["y"]
-			[px,py]=Projection(drag_data["item"],delta_x,delta_y)
-			n = drag_data["item"]%4			
+			[px,py]=Projection(drag_data["item"],delta_x,delta_y) 
+			#projection allows you to stretch in the direction perpendicular to your chosen line
+			n = drag_data["item"]%4	 #finds the line closest to mouse click of closest square		
 
 			if n==3:
 				[x1,y1,x2,y2]=canvas.coords(drag_data["item"])
@@ -1216,16 +1220,17 @@ def holdButtonDown(event): #defines transformations for each case
 
 			drag_data["x"] = event.x
         		drag_data["y"] = event.y
-	elif rotate_square['bg']=="dark orange" and drag_data["item"] not in [1,2]: 		#rotates figure around its center
+	elif rotate_square['bg']=="dark orange" and drag_data["item"] not in [1,2]: 		
+		#rotates figure around its center
 
-		m=int(canvas.gettags(drag_data["item"])[1])
-		c=center(quads[m][0],quads[m][2])
-		c1=[drag_data["x"]-c[0], c[1]-drag_data["y"]]
-		c2=[event.x-c[0], c[1]-event.y]
-		[cs,sn]=trigs(c1,c2)
+		m=int(canvas.gettags(drag_data["item"])[1]) 		#finds closest square
+		c=center(quads[m][0],quads[m][2]) 			#finds center of square
+		c1=[drag_data["x"]-c[0], c[1]-drag_data["y"]]  		#gives vector from center to current mouse position
+		c2=[event.x-c[0], c[1]-event.y]				#gives vector from center to click position
+		[cs,sn]=trigs(c1,c2)					#gives cosine and sine of rotation
 
 		a=[]
-		for i in range(4):
+		for i in range(4):					#sets coordinates of squares according to rotation
 			a=a+[canvas.coords(quads[m][i])]
 		
 		for i in range(4):	
@@ -1233,7 +1238,8 @@ def holdButtonDown(event): #defines transformations for each case
 						(a[i][0]-c[0])*sn +(a[i][1]-c[1])*cs+c[1],
 						(a[i][2]-c[0])*cs-(a[i][3]-c[1])*sn+c[0],
 						(a[i][2]-c[0])*sn +(a[i][3]-c[1])*cs+c[1])
-		reset_entries(m)
+			
+		reset_entries(m)	#changes entries to entries of rotation transformation
         	drag_data["x"] = event.x
         	drag_data["y"] = event.y
 		
@@ -1241,8 +1247,8 @@ def holdButtonDown(event): #defines transformations for each case
 	#skews rectangle by moving chosen side with the mouse, while fixing opposite side,
 	#and stretching adjacent sides in the same direction as mouse
 
-		m=int(canvas.gettags(drag_data["item"])[1])
-		delta_x = event.x - drag_data["x"]
+		m=int(canvas.gettags(drag_data["item"])[1]) #notation here is about the same as the above
+		delta_x = event.x - drag_data["x"]	    #transformations.  	
         	delta_y = event.y - drag_data["y"]
 		n = drag_data["item"]%4
 
@@ -1275,7 +1281,7 @@ def holdButtonDown(event): #defines transformations for each case
 		
 		
 		
-def ButtonRelease(event):
+def ButtonRelease(event):  #this event finalizes action after mouse button is released.
 	global records
 	global front_records
 
@@ -1313,6 +1319,8 @@ def trigs(c1,c2): #computes the sin(theta) and cos(theta) for rotations
 	cosine=dotc12/sqrt(nc1*nc2)
 	if orient_check>=0: return [cosine, -sqrt(1-cosine*cosine)]
 	return [cosine, sqrt(1-cosine*cosine)]	
+
+#The above completes the functions for the IFS window.  we now go to the attractor window magic
 		
 def createPoint(fractalCanvas, x0, y0, c): #creates a point in the attractor window
 	p=fractalCanvas.create_line(x0, y0+1, x0+1, y0, fill=c)
@@ -1321,10 +1329,10 @@ def createPoint(fractalCanvas, x0, y0, c): #creates a point in the attractor win
 
 
 #function for generating the points of the fractal
-
 def f(x,y,Probs):
-	m=random();
+	m=random(); #m determines which function to apply to the last generated point of the attractor
 	
+	#Picks a function, then creates new point by applying the transformation that is tied to the probabiity 
 	if m<Probs[0]: 
 		return 	[matrices[0][0]*x+matrices[0][1]*y +matrices[0][4], 
 					matrices[0][2]*x+matrices[0][3]*y +matrices[0][5], 						square_count[0]]
@@ -1337,7 +1345,7 @@ def f(x,y,Probs):
 					 square_count[i]]
 	
 
-#generates the points on the fractalCanvas
+#draws the points on the fractalCanvas
 def animate():
 	global XYC
 	global number_functions

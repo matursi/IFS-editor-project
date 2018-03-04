@@ -28,12 +28,12 @@ import os
 #	scroll: placed in frame 2, a scroll bar for the entries
 
 #	tick: tells which square to create
-#	quads
-#	matrices
-#	number_functions
-#	XYC
-#	records
-#	front_records
+#	quads: contains an array of the TKinter lines of the square
+#	matrices: numerical data pertaining to IFS
+#	number_functions: number of functions in the IFS
+#	XYC: x,y coordinates of attractor, with color of points
+#	records: record history of IFS configurations
+#	front_records: undo history of configurations
 
 
 
@@ -518,7 +518,7 @@ def remove_function():
 	global front_records
 	global P
 
-	#must maintain at least two function entriy lines
+	#must maintain at least two function entry lines
 	if number_functions==2:
 		return 1
 	
@@ -994,6 +994,10 @@ def create_case(): #makes a new square,
 	print records[-1]
 	print front_records
 	
+def create_new_case(): #command for button click, enables instance where undo history is wiped out
+	create_case()
+	front_records = []
+	
 def stretch_case(): #indicates choice to set transformations on canvas to stretch:
 	#non grey colors represent on a button indicate which transformation you will activate if you click on a square
 	create_square.configure(bg="gray85")
@@ -1349,9 +1353,11 @@ def f(x,y,Probs):
 def animate():
 	global XYC
 	global number_functions
-	if start["bg"]=="red":
+	if start["bg"]=="red": #this means that the attractor is still generating points.  
+				# we prevent the function from working, else repeated clicks might make the 
+				# attractor generation run too long or too many times
 		return 1
-	start.configure(bg="red")
+	start.configure(bg="red") #make start button red to alert user that generation is in process
 	start.configure(activebackground="pink")
 	#gives starting point, translates it to a starting point on the fractalCanvas
 	xpoints=[0]  
@@ -1365,23 +1371,23 @@ def animate():
 	for i in range(number_functions):
 		Probs=Probs+[float(prob[i].get())]
 	
-	if sum(Probs) != 0: Probs=[p/sum(Probs) for p in Probs]
+	if sum(Probs) != 0: Probs=[p/sum(Probs) for p in Probs] #make Probs into real prob density function of prob
 	
-	fractalCanvas.update()
+	fractalCanvas.update() #this cute little thing enables animated generation of fractal!
 
 	for i in range(int(numpoints.get())):
-		[x,y,c]=f(xpoints[-1],ypoints[-1],Probs);
+		[x,y,c]=f(xpoints[-1],ypoints[-1],Probs); #gets last point, c determins color of next point
 		xpoints=xpoints+[x];
 		ypoints=ypoints+[y];
 		point_color=point_color+[c]
-		items[i]=createPoint(fractalCanvas,startingX+float(scale_X_point.get())*x,
+		items[i]=createPoint(fractalCanvas,startingX+float(scale_X_point.get())*x, #creates point in attractor
 		startingY-float(scale_Y_point.get())*y, c)
 		fractalCanvas.update()
 	XYC[0]=XYC[0]+xpoints 
 	XYC[1]=XYC[1]+ypoints 
 	XYC[2]=XYC[2]+point_color
 
-	start.configure(bg="gray85")
+	start.configure(bg="gray85") #changes start button back to grey to indicated that attractor generation is complete
 	start.configure(activebackground="#ececec")
 
 #removes all points from the Fractal canvas		
@@ -1460,7 +1466,7 @@ canvas.bind('<ButtonRelease-1>', ButtonRelease)
 
 # defines buttons in the transformation window
 clear_button = Tkinter.Button(window, text="clear", command=clear)
-create_square = Tkinter.Button(window, text="square", width= "5", command=create_case)
+create_square = Tkinter.Button(window, text="square", width= "5", command=create_new_case)
 
 
 stretch_square = Tkinter.Button(window, text="stretch", width= "7", command=stretch_case)
@@ -1470,16 +1476,18 @@ rotate_square = Tkinter.Button(window, text="rotate", width = "7", command=rotat
 entry_square= Tkinter.Button(window, text="entries", width = "7",command=entry_case)
 
 
-
-
+#creates axes of cartesian plane
 s=canvas.create_line(W/2, 0, W/2, H, fill="#FFFFFF", tags = "line")
 s2=canvas.create_line(0, H/2, W, H/2, fill="#FFFFFF", tags = "line")
 
+
+#put options and formatting menu in grids, as well as canvas and coords
 options.grid(row=0,column=0)
 formatting.grid(row=0, column =1) 
 canvas.grid(row=1, columnspan=14, sticky="nsew")
 coords.grid(row = 2,column=0, columnspan = 1)
 
+#puts other frames, widgets into grid 
 frame2.grid(row=3,column=0,columnspan=8, rowspan=2, sticky= "we")
 widgetCanvas.grid(row=0,column=1, rowspan=5, sticky= "we")
 frame.place()
@@ -1488,6 +1496,7 @@ probLabel.grid(row=0, column=7)
 
 scroll.grid(row=0,column=0, rowspan=3, sticky="ns")
 
+#puts buttons, entries into specific grids
 create_square.grid(row = 2, column = 1,columnspan=1, sticky="we")
 tick_entry.grid(row=2, column=2,sticky="we")
 stretch_square.grid(row =2, column=3,columnspan=2, sticky="we")
@@ -1506,7 +1515,7 @@ print type(AxisX_entry.get())
 print type(AxisX_entry['textvariable'])
 
 
-
+#opens up functions!!!
 window.mainloop()
 
 
